@@ -1,4 +1,4 @@
-// branch: main commit: 5a7dcb9a751bfa0d049a3f63e708e60c1e02f896 Thu, 27 Jun 2024 18:26:46 GMT
+// branch: main commit: 258ad3d851cc4945eae2aab2dcc80a8d0c14d861 Fri, 28 Jun 2024 14:19:21 GMT
 import{html as a,LitElement as j}from"/libs/deps/lit-all.min.js";import{LitElement as q,html as T,css as F}from"/libs/deps/lit-all.min.js";var s=class extends q{static properties={size:{type:String,attribute:!0},src:{type:String,attribute:!0},alt:{type:String,attribute:!0},href:{type:String,attribute:!0}};constructor(){super(),this.size="m",this.alt=""}render(){let{href:e}=this;return e?T`<a href="${e}">
                   <img src="${this.src}" alt="${this.alt}" loading="lazy" />
               </a>`:T` <img src="${this.src}" alt="${this.alt}" loading="lazy" />`}static styles=F`
@@ -801,11 +801,6 @@ merch-card[variant="mini-compare-chart"] [is="inline-price"] {
     min-width: 1px;
 }
 
-merch-card[variant="mini-compare-chart"] span.placeholder-resolved[data-template="strikethrough"] {
-    font-size: var(--consonant-merch-card-body-m-font-size);
-    font-weight: 500;
-}
-
 merch-card[variant="mini-compare-chart"] [slot="price-commitment"] {
     font-size: var(--consonant-merch-card-body-xs-font-size);
     padding: 0 var(--consonant-merch-spacing-s);
@@ -909,10 +904,6 @@ merch-card[variant="mini-compare-chart"] .footer-row-cell-description a {
 
     merch-card[variant="mini-compare-chart"] [slot="heading-m-price"]:has(+ [slot="footer"]) {
         padding-bottom: 0;
-    }
-
-    merch-card[variant="mini-compare-chart"] span.placeholder-resolved[data-template="strikethrough"] {
-        font-size: var(--consonant-merch-card-body-xs-font-size);
     }
 
     html[lang="he"] merch-card[variant="mini-compare-chart"] [is="inline-price"] .price-recurrence::before {
@@ -1388,6 +1379,12 @@ merch-card .footer-row-cell:nth-child(8) {
 
 span[is="inline-price"][data-template='strikethrough'] {
     text-decoration: line-through;
+}
+
+merch-card span.placeholder-resolved[data-template='strikethrough'],
+merch-card span.price.price-strikethrough {
+  font-size: var(--consonant-merch-card-body-xs-font-size);
+  font-weight: normal;
 }
 
 /* merch-offer-select */
