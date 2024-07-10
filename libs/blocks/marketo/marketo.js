@@ -19,8 +19,12 @@ const ROOT_MARGIN = 1000;
 const FORM_ID = 'form id';
 const BASE_URL = 'marketo host';
 const MUNCHKIN_ID = 'marketo munckin';
+const SUCCESS_TYPE = 'form.success.type';
+const SUCCESS_CONTENT = 'form.success.content';
 const FORM_MAP = {
-  'destination-url': 'form.success.content',
+  'destination-type': SUCCESS_TYPE,
+  'success-content': SUCCESS_CONTENT,
+  'destination-url': SUCCESS_CONTENT,
   'co-partner-names': 'program.copartnernames',
   'sfdc-campaign-id': 'program.campaignids.sfdc',
 };
@@ -74,6 +78,18 @@ export const formSuccess = (form) => {
     return false;
   }
 
+  const { content, type } = window.mcz_marketoForm_pref.form.success;
+
+  if (type === 'section') {
+    try {
+      const success = document.querySelector(`.section.${content}`);
+      success.classList.remove('hide-block');
+      success.scrollIntoView({ behavior: 'smooth' });
+    } catch (e) {
+      window.lana?.log(`Error showing Marketo success section: ${content}`);
+    }
+  }
+
   return true;
 };
 
@@ -115,19 +131,33 @@ export const setPreferences = (formData) => {
 };
 
 export const loadMarketo = (el, formData) => {
+  const formID = formData[FORM_ID];
   const baseURL = formData[BASE_URL];
+  const munchkinID = formData[MUNCHKIN_ID];
+  const content = formData[SUCCESS_CONTENT];
+  const type = formData[SUCCESS_TYPE];
+
+  if (type === 'redirect') {
+    formData[SUCCESS_CONTENT] = decorateURL(content);
+  }
+  if (type === 'section') {
+    formData[SUCCESS_CONTENT] = content.replaceAll(' ', '-');
+  }
+
+  setPreferences(formData);
 
   loadScript(`https://${baseURL}/js/forms2/js/forms2.min.js`)
     .then(() => {
       const { MktoForms2 } = window;
       if (!MktoForms2) throw new Error('Marketo forms not loaded');
 
-      MktoForms2.loadForm(`//${baseURL}`, formData[MUNCHKIN_ID], formData[FORM_ID]);
+      MktoForms2.loadForm(`//${baseURL}`, munchkinID, formID);
       MktoForms2.whenReady((form) => { readyForm(form, formData); });
     })
     .catch(() => {
-      /* c8 ignore next */
+      /* c8 ignore next 2 */
       el.style.display = 'none';
+      window.lana?.log(`Error loading Marketo form for ${baseURL} ${formID}`);
     });
 };
 
@@ -135,7 +165,6 @@ export default function init(el) {
   const children = Array.from(el.querySelectorAll(':scope > div'));
   const encodedConfigDiv = children.shift();
   const link = encodedConfigDiv.querySelector('a');
-  let formData = {};
 
   if (!link?.href) {
     el.style.display = 'none';
@@ -143,8 +172,7 @@ export default function init(el) {
   }
 
   const encodedConfig = link.href.split('#')[1];
-
-  formData = parseEncodedConfig(encodedConfig);
+  const formData = parseEncodedConfig(encodedConfig);
 
   children.forEach((element) => {
     const key = element.children[0]?.textContent.trim().toLowerCase().replaceAll(' ', '-');
@@ -166,31 +194,19 @@ export default function init(el) {
     return;
   }
 
-  if (formData['form.success.content']) {
-    const destinationUrl = decorateURL(formData['form.success.content']);
-
-    if (destinationUrl) {
-      formData['form.success.type'] = 'redirect';
-      formData['form.success.content'] = destinationUrl;
-    }
-  }
-
-  setPreferences(formData);
-
+  const { title, description } = formData;
   const fragment = new DocumentFragment();
   const formWrapper = createTag('section', { class: 'marketo-form-wrapper' });
 
-  if (formData.title) {
-    const title = createTag('h3', { class: 'marketo-title' }, formData.title);
-    formWrapper.append(title);
+  if (title) {
+    formWrapper.append(createTag('h3', { class: 'marketo-title' }, title));
   }
 
-  if (formData.description) {
-    const description = createTag('p', { class: 'marketo-description' }, formData.description);
-    formWrapper.append(description);
+  if (description) {
+    formWrapper.append(createTag('p', { class: 'marketo-description' }, description));
   }
 
-  const marketoForm = createTag('form', { ID: `mktoForm_${formID}`, class: 'hide-errors', style: 'opacity:0;visibility:hidden;' });
+  const marketoForm = createTag('form', { ID: `mktoForm_${formData[FORM_ID]}`, class: 'hide-errors', style: 'opacity:0;visibility:hidden;' });
   const span1 = createTag('span', { id: 'mktoForms2BaseStyle', style: 'display:none;' });
   const span2 = createTag('span', { id: 'mktoForms2ThemeStyle', style: 'display:none;' });
   formWrapper.append(span1, span2, marketoForm);
