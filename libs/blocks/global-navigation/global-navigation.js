@@ -5,7 +5,6 @@ import {
   loadIms,
   decorateLinks,
   loadScript,
-  loadStyle,
 } from '../../utils/utils.js';
 import {
   closeAllDropdowns,
@@ -23,6 +22,7 @@ import {
   loadBaseStyles,
   loadBlock,
   loadDecorateMenu,
+  rootPath,
   loadStyles,
   logErrorFor,
   selectors,
@@ -409,14 +409,14 @@ class Gnav {
           Search,
         ] = await Promise.all([
           loadBlock('../features/search/gnav-search.js'),
-          loadStyles('features/search/gnav-search.css'),
+          loadStyles(rootPath('features/search/gnav-search.css')),
         ]);
         this.Search = Search;
 
         if (!this.useUniversalNav) {
           const [ProfileDropdown] = await Promise.all([
             loadBlock('../features/profile/dropdown.js'),
-            loadStyles('features/profile/dropdown.css'),
+            loadStyles(rootPath('features/profile/dropdown.css')),
           ]);
           this.ProfileDropdown = ProfileDropdown;
         }
@@ -465,6 +465,11 @@ class Gnav {
     const profileData = await fetch(`https://${env.adobeIO}/profile`, { headers });
 
     if (profileData.status !== 200) {
+      lanaLog({
+        message: 'GNAV: decorateProfile has failed to fetch profile data',
+        e: `${profileData.statusText} url: ${profileData.url}`,
+        tags: 'errorType=info,module=gnav',
+      });
       return;
     }
 
@@ -515,7 +520,7 @@ class Gnav {
     const unavVersion = new URLSearchParams(window.location.search).get('unavVersion') || '1.1';
     await Promise.all([
       loadScript(`https://${environment}.adobeccstatic.com/unav/${unavVersion}/UniversalNav.js`),
-      loadStyle(`https://${environment}.adobeccstatic.com/unav/${unavVersion}/UniversalNav.css`),
+      loadStyles(`https://${environment}.adobeccstatic.com/unav/${unavVersion}/UniversalNav.css`),
     ]);
 
     const getChildren = () => {
@@ -616,10 +621,12 @@ class Gnav {
       children: getChildren(),
     });
 
-    window.UniversalNav(getConfiguration());
+    // Exposing UNAV config for consumers
+    CONFIG.universalNav.universalNavConfig = getConfiguration();
+    window.UniversalNav(CONFIG.universalNav.universalNavConfig);
 
     isDesktop.addEventListener('change', () => {
-      window.UniversalNav.reload(getConfiguration());
+      window.UniversalNav.reload(CONFIG.universalNav.universalNavConfig);
     });
   };
 
@@ -638,7 +645,7 @@ class Gnav {
       webappPrompt,
     ] = await Promise.all([
       import('../../features/webapp-prompt/webapp-prompt.js'),
-      loadStyle(`${base}/features/webapp-prompt/webapp-prompt.css`),
+      loadStyles(`${base}/features/webapp-prompt/webapp-prompt.css`),
     ]);
 
     webappPrompt.default({ promptPath, entName, parent: this.blocks.universalNav, getAnchorState });
@@ -1006,12 +1013,7 @@ export default async function init(block) {
   try {
     const { mep } = getConfig();
     const url = await getSource();
-    const content = await fetchAndProcessPlainHtml({ url })
-      .catch((e) => lanaLog({
-        message: `Error fetching gnav content url: ${url}`,
-        e,
-        tags: 'errorType=error,module=gnav',
-      }));
+    const content = await fetchAndProcessPlainHtml({ url });
     if (!content) return null;
     const gnav = new Gnav({
       content,
