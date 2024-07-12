@@ -1,4 +1,4 @@
-// branch: MWPW-153629 commit: 010a0900c392e66d6e2a295cf67811b313d14611 Fri, 12 Jul 2024 22:53:35 GMT
+// branch: MWPW-153629 commit: 010a0900c392e66d6e2a295cf67811b313d14611 Fri, 12 Jul 2024 23:01:10 GMT
 import{html as o,LitElement as te,nothing as re}from"/libs/deps/lit-all.min.js";import{LitElement as Y,html as M,css as Q}from"/libs/deps/lit-all.min.js";var h=class extends Y{static properties={size:{type:String,attribute:!0},src:{type:String,attribute:!0},alt:{type:String,attribute:!0},href:{type:String,attribute:!0}};constructor(){super(),this.size="m",this.alt=""}render(){let{href:e}=this;return e?M`<a href="${e}">
                   <img src="${this.src}" alt="${this.alt}" loading="lazy" />
               </a>`:M` <img src="${this.src}" alt="${this.alt}" loading="lazy" />`}static styles=Q`
@@ -961,7 +961,7 @@ div[slot='bg-image'] img {
 /* Mobile */
 @media screen and ${w} {
     :root {
-        --consonant-merch-card-mini-compare-chart-width: 142px;
+        --consonant-merch-card-mini-compare-chart-width: 302px;
         --consonant-merch-card-segment-width: 276px;
         --consonant-merch-card-mini-compare-chart-wide-width: 302px;
         --consonant-merch-card-special-offers-width: 302px;
@@ -1322,6 +1322,8 @@ div[slot='bg-image'] img {
     .three-merch-cards.mini-compare-chart merch-card [slot="footer"] a,
     .four-merch-cards.mini-compare-chart merch-card [slot="footer"] a {
         flex: 1;
+        grid-template-columns: var(--consonant-merch-card-mini-compare-chart-width);
+        gap: var(--consonant-merch-spacing-xs);
     }
 }
 
